@@ -1,5 +1,7 @@
 # Tripwire
 
+**▶ [Demo video (YouTube)](https://youtu.be/d_Eja0wBL3k)** · **🌐 [Live prototype: trace viewer](https://miteshkumar07.github.io/Tripwire/demo/viewer.html)**
+
 Tripwire triages public GitHub issues into Linear and Slack. Because the issue text is written by strangers and the agent holds write credentials to two other apps, it has the lethal trifecta by construction, so we built it to be attacked and tested it with 16 injection attacks across 5 families: 16 blocked, 0 through.
 
 **[Scoreboard](scoreboard.md)** · **[Reliability brief](RELIABILITY_BRIEF.md)** · **[Trace viewer](demo/viewer.html)**
