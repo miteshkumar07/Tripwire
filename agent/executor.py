@@ -14,7 +14,7 @@ from contracts import Plan, PlanStep, RunResult, Tainted
 from kernel import capability as capmod
 from kernel.broker import KERNEL_DENIALS, RunHalted, ToolBroker
 from kernel.canary import CanaryHit
-from kernel.taint import endorse, propagate, unwrap
+from kernel.taint import concat, endorse, unwrap
 
 DENIAL_KINDS = ("cap_denied", "taint_denied", "egress_denied", "canary_hit")
 # Structural args decide WHERE an effect lands. The capability pins them.
@@ -56,14 +56,15 @@ def reduce_dedupe(results: Tainted) -> list[Tainted]:
         title = re.sub(r"\s+", " ", _WORD.sub("", str(hit.get("title", ""))))[:120]
         reduced.append({
             "id": endorse(Tainted(issue_id, "linear:search_issues", "untrusted"), {issue_id}),
-            "title": Tainted(title, "linear:search_issues", "untrusted"),
+            "title": Tainted(title, f"linear:issue:{issue_id}", "untrusted"),
             "score": float(hit.get("score", 0.0)),
         })
     return reduced
 
 
 def build_symbols(number: int, fields: dict, candidates: list) -> SymbolTable:
-    origin = fields["summary"].origin
+    """Composite text is built with concat(), so every part keeps its own trust and origin
+    all the way to the broker's canary scan."""
     severity = endorse(fields["severity"], extractor.SEVERITIES).value
     area = endorse(fields["area"], extractor.AREAS).value
     summary = fields["summary"]
@@ -75,20 +76,22 @@ def build_symbols(number: int, fields: dict, candidates: list) -> SymbolTable:
              "Slack #tw-bugs, for high or critical severity")
     t.define("$channel_general", _trusted(config.SLACK_CHANNEL_GENERAL, "config"),
              "Slack #tw-general, for low or medium severity")
-    t.define("$ticket_title", propagate(f"GH#{number} [{severity}/{area}] {summary.value}"[:160], origin, "untrusted"),
+    t.define("$ticket_title", concat(f"GH#{number} [{severity}/{area}] ", summary),
              "Title for a new Linear ticket")
     t.define("$ticket_description",
-             propagate(f"{summary.value}\n\nReported on GitHub: {url}\nSeverity: {severity}\nArea: {area}",
-                       origin, "untrusted"),
+             concat(summary, f"\n\nReported on GitHub: {url}\nSeverity: {severity}\nArea: {area}"),
              "Description for a new Linear ticket")
-    t.define("$dup_comment", propagate(f"Another report on GitHub #{number}: {url}\n\n{summary.value}",
-                                       origin, "untrusted"),
-             "Comment body for an existing duplicate ticket")
     t.define("$slack_text",
              _trusted(f"Triaged {severity} {area} bug from GitHub #{number}: {url}", "executor:template"),
              "Slack notification text")
     for i, cand in enumerate(candidates, start=1):
+        issue_id = cand["id"].value
         t.define(f"$dup_{i}", cand["id"], f"Linear ticket id of dedupe candidate #{i}")
+        # Quote the matched ticket's TITLE (short, written by our team). Never its description.
+        t.define(f"$dup_{i}_comment",
+                 concat(f"Duplicate of {issue_id}: ", cand["title"],
+                        f"\n\nAnother report on GitHub #{number}: {url}\n\n", summary),
+                 f"Comment body for dedupe candidate #{i} (use only with $dup_{i})")
     return t
 
 

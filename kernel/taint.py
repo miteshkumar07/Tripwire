@@ -2,6 +2,10 @@
 
 Rule of two: a tool call whose args derive from untrusted data AND whose effect is
 irreversible or leaves the system requires human approval.
+
+Composite text is built with `concat`, which keeps every part's own trust and origin
+(a "rope") instead of flattening them into one string. Parts are only joined by
+`unwrap`, inside the broker, right before the adapter call.
 """
 from typing import Any, Iterable, Iterator
 
@@ -10,6 +14,8 @@ from contracts import Tainted
 IRREVERSIBLE_OR_EXTERNAL = frozenset({
     "linear.create_issue", "linear.close_issue", "slack.post_message",
 })
+
+TEMPLATE_ORIGIN = "executor:template"
 
 
 class TaintDenied(Exception):
@@ -36,9 +42,25 @@ def endorse(value: Tainted, allowed: Iterable) -> Tainted:
     return Tainted(value=raw, origin=f"{origin}|endorsed", trust="trusted")
 
 
+def _is_rope(value: Any) -> bool:
+    return isinstance(value, tuple) and len(value) > 0 and all(isinstance(p, Tainted) for p in value)
+
+
+def concat(*parts) -> Tainted:
+    """Join text parts while keeping each part's provenance. Plain strings are trusted
+    executor template text."""
+    wrapped = tuple(p if isinstance(p, Tainted) else Tainted(str(p), TEMPLATE_ORIGIN, "trusted")
+                    for p in parts)
+    trust = "untrusted" if any(_untrusted(p) for p in wrapped) else "trusted"
+    origins = ",".join(dict.fromkeys(p.origin for p in wrapped))
+    return Tainted(value=wrapped, origin=f"concat({origins})", trust=trust)
+
+
 def unwrap(value: Any) -> Any:
     if isinstance(value, Tainted):
         return unwrap(value.value)
+    if _is_rope(value):
+        return "".join(str(unwrap(p)) for p in value)
     if isinstance(value, dict):
         return {k: unwrap(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -46,22 +68,27 @@ def unwrap(value: Any) -> Any:
     return value
 
 
-def iter_strings(value: Any) -> Iterator[str]:
-    """Every string reachable in a (possibly Tainted) structure, including dict keys and
-    stringified scalars."""
+def iter_origin_strings(value: Any, origin: str = "literal") -> Iterator[tuple[str, str]]:
+    """(origin, text) for every string reachable in a (possibly Tainted) structure,
+    including dict keys and stringified scalars. Rope parts are yielded separately."""
     if isinstance(value, Tainted):
-        yield from iter_strings(value.value)
+        yield from iter_origin_strings(value.value, value.origin)
     elif isinstance(value, dict):
         for k, v in value.items():
-            yield str(k)
-            yield from iter_strings(v)
+            yield origin, str(k)
+            yield from iter_origin_strings(v, origin)
     elif isinstance(value, (list, tuple, set)):
         for v in value:
-            yield from iter_strings(v)
+            yield from iter_origin_strings(v, origin)
     elif isinstance(value, str):
-        yield value
+        yield origin, value
     elif value is not None:
-        yield str(value)
+        yield origin, str(value)
+
+
+def iter_strings(value: Any) -> Iterator[str]:
+    for _, text in iter_origin_strings(value):
+        yield text
 
 
 def _untrusted(value: Any) -> bool:

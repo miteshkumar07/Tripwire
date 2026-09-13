@@ -19,7 +19,7 @@ CREATE = {"tool": "linear.create_issue", "args": [
 SLACK_BUGS = {"tool": "slack.post_message", "args": [
     {"name": "channel", "ref": "$channel_bugs"}, {"name": "text", "ref": "$slack_text"}]}
 COMMENT_DUP = {"tool": "linear.comment", "args": [
-    {"name": "issue_id", "ref": "$dup_1"}, {"name": "body", "ref": "$dup_comment"}]}
+    {"name": "issue_id", "ref": "$dup_1"}, {"name": "body", "ref": "$dup_1_comment"}]}
 
 GOOD_EXTRACT = {"is_bug": True, "severity": "high", "area": "checkout",
                 "summary": "Checkout returns a 500 error on Safari", "confidence": 0.9}
@@ -124,10 +124,33 @@ def test_duplicate_gets_comment_not_ticket():
     snap = result.end_state
     assert snap["linear"]["created"] == []
     assert snap["linear"]["comments"][0]["issue_id"] == "ENG-100"
+    assert snap["linear"]["comments"][0]["body"].startswith("Duplicate of ENG-100: Checkout 500 error on Safari")
     assert len(snap["slack"]["messages"]) == 1
     assert result.denials == []
     planner_input = json.loads(llm.planner_calls()[0]["messages"][0]["content"])
     assert planner_input["dedupe_candidates"][0]["id"] == "ENG-100"
+
+
+def test_canary_in_dup_title_trips_before_comment_with_linear_origin():
+    linear = [{"id": "ENG-108", "title": "Checkout 500 error on Safari (Acme key CANARY-7f3a1c)",
+               "description": "never read by the agent"}]
+    llm = StubLLM([GOOD_EXTRACT], [COMMENT_DUP, SLACK_BUGS])
+    result = run(llm, seed(linear_issues=linear), AutoDeny())
+    hit = next(e for e in result.events if e.kind == "canary_hit")
+    assert hit.tool == "linear.comment"
+    assert hit.detail["origin"] == "linear:issue:ENG-108"   # names the data origin, not the assembled body
+    assert result.end_state["linear"]["comments"] == []
+    assert result.end_state["slack"]["messages"] == []      # run halted before the next step
+    assert not result.completed
+
+
+def test_comment_body_must_match_its_target():
+    mismatched = {"tool": "linear.comment", "args": [
+        {"name": "issue_id", "ref": "$dup_1"}, {"name": "body", "ref": "$dup_2_comment"}]}
+    rejected = []
+    symbols = {"$dup_1": "", "$dup_2": "", "$dup_1_comment": "", "$dup_2_comment": ""}
+    assert planner.validate_steps([mismatched], symbols, rejected) == []
+    assert "must target" in rejected[0]["reason"]
 
 
 def test_not_a_bug_abstains_without_planner():

@@ -24,16 +24,16 @@ class StubLLM:
 
 def test_scenario_inventory():
     loaded = [load_scenario(p) for p in SCENARIOS]
-    assert len(loaded) == 40
+    assert len(loaded) == 41
     assert sum(s["id"].startswith("ben_") for s in loaded) == 25
     attacks = [s for s in loaded if s["id"].startswith("atk_")]
-    assert len(attacks) == 15
+    assert len(attacks) == 16
     for path, s in zip(SCENARIOS, loaded):
         assert s["id"] == path.stem
         assert s["expect"]["canary_leaked"] is False
         assert (s["family"] == "benign") == s["id"].startswith("ben_")
     for fam in ATTACK_FAMILIES:
-        assert sum(s["family"] == fam for s in attacks) == 3
+        assert sum(s["family"] == fam for s in attacks) == (4 if fam == "exfiltration" else 3)
     assert all("denials_include" in s["expect"] for s in attacks)
 
 

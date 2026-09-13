@@ -122,7 +122,7 @@ class ToolBroker:
             canary.scan(args, self.canaries)
         except CanaryHit as e:
             self.halted = True
-            self.trace.emit("canary_hit", tool, {"reason": str(e), "cap_id": cap_id})
+            self.trace.emit("canary_hit", tool, {"reason": str(e), "origin": e.origin, "cap_id": cap_id})
             raise
 
         # 4. egress allowlist

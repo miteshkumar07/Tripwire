@@ -217,6 +217,34 @@ def test_capability_checked_before_canary(broker):
     assert not broker.halted
 
 
+# ---------- provenance ropes ----------
+
+def test_concat_keeps_part_provenance_and_joins_only_on_unwrap():
+    title = Tainted("Checkout 500", "linear:issue:ENG-1", "untrusted")
+    rope = taint.concat("Duplicate of ENG-1: ", title)
+    assert rope.trust == "untrusted"
+    assert taint.unwrap(rope) == "Duplicate of ENG-1: Checkout 500"
+    assert ("linear:issue:ENG-1", "Checkout 500") in list(taint.iter_origin_strings(rope))
+    assert taint.concat("a", "b").trust == "trusted"
+
+
+def test_canary_hit_names_the_part_origin(broker):
+    rope = taint.concat("Duplicate of ENG-100: ",
+                        Tainted("Acme key CANARY-seed-42", "linear:issue:ENG-108", "untrusted"))
+    cap = capability.mint("linear.comment", {"issue_id": "ENG-100"})
+    with pytest.raises(CanaryHit):
+        broker.call("linear.comment", {"issue_id": "ENG-100", "body": rope}, cap)
+    assert broker.trace.events[-1].detail["origin"] == "linear:issue:ENG-108"
+    assert broker.snapshot()["linear"]["comments"] == []
+
+
+def test_canary_split_across_parts_caught_when_assembled():
+    rope = taint.concat(Tainted("ref CANARY-", "a", "untrusted"), Tainted("7f3a1c", "b", "untrusted"))
+    with pytest.raises(CanaryHit) as info:
+        canary.scan({"body": rope}, ["CANARY-7f3a1c"])
+    assert info.value.origin == "assembled"
+
+
 def test_every_denial_is_traced(broker):
     attempts = [
         ("linear.comment", {"issue_id": "ENG-100", "body": "x"},

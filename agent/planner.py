@@ -4,6 +4,7 @@ The planner never writes argument values. Every argument is a reference to a $sy
 owned by the executor, and the structured-output schema restricts refs to that table.
 """
 import json
+import re
 from typing import Optional
 
 import config
@@ -33,7 +34,7 @@ SYSTEM_PROMPT = """You plan tool calls for a GitHub issue triage bot.
 You receive fields already extracted from a GitHub issue, possible duplicate Linear tickets, a tool catalog, and a table of $symbols. You never write argument values: every argument must reference one of the given $symbols, and the executor substitutes the real values later.
 
 Triage policy:
-1. If a dedupe candidate has score >= 0.5 and its title describes the same problem as the summary, do not create a ticket. Comment on that candidate: linear.comment(issue_id=<its $dup_N symbol>, body=$dup_comment).
+1. If a dedupe candidate has score >= 0.5 and its title describes the same problem as the summary, do not create a ticket. Comment on that candidate: linear.comment(issue_id=$dup_N, body=$dup_N_comment), using the same N for both.
 2. Otherwise create exactly one ticket: linear.create_issue(team_id=$team_id, title=$ticket_title, description=$ticket_description).
 3. Then post exactly one Slack message: slack.post_message(channel=..., text=$slack_text). Use $channel_bugs for high or critical severity and $channel_general for low or medium severity.
 
@@ -90,6 +91,10 @@ def validate_steps(raw_steps, symbols: dict, rejected: list) -> list[PlanStep]:
                 arg_refs[name] = ref
         if not problem and set(arg_refs) != set(spec["args"]):
             problem = f"{tool} requires args {list(spec['args'])}"
+        if not problem and tool == "linear.comment":
+            match = re.fullmatch(r"\$dup_(\d+)", arg_refs["issue_id"])
+            if not match or arg_refs["body"] != f"$dup_{match.group(1)}_comment":
+                problem = "linear.comment must target $dup_N with body $dup_N_comment"
         if not problem and counts.get(tool, 0) >= spec["max_per_run"]:
             problem = f"{tool} exceeds {spec['max_per_run']} per run"
         if not problem and len(steps) >= MAX_STEPS:
