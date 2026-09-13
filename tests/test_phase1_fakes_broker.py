@@ -75,6 +75,17 @@ def test_adapter_errors_are_traced(broker):
     assert broker.trace.events[-1].kind == "error"
 
 
+def test_search_folds_plurals():
+    b = ToolBroker.with_fakes("run-search")
+    b.reset({"linear": {"issues": [{"id": "ENG-101", "title": "Invoice PDF shows wrong VAT number"}]}})
+    # the exact summary the extractor produced for ben_13 in the Phase 4 run
+    hits = b.call("linear.search_issues",
+                  {"query": "Invoices display incorrect VAT number, causing accounting rejection."},
+                  _cap("linear.search_issues")).value
+    assert hits[0]["id"] == "ENG-101"
+    assert hits[0]["score"] >= 0.5  # planner's duplicate threshold
+
+
 def test_only_broker_imports_adapters():
     pattern = re.compile(r"^\s*(from|import)\s+adapters\b", re.M)
     offenders = []
