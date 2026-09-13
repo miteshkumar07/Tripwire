@@ -32,7 +32,16 @@ SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 # --- egress allowlist ---
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "tripwire/tripwire-demo")
+def _normalise_repo(value: str) -> str:
+    """Accept `owner/repo`, `https://github.com/owner/repo(.git)` or `git@github.com:owner/repo.git`."""
+    value = value.strip().rstrip("/")
+    for prefix in ("https://github.com/", "http://github.com/", "git@github.com:"):
+        if value.startswith(prefix):
+            value = value[len(prefix):]
+    return value.removesuffix(".git")
+
+
+GITHUB_REPO = _normalise_repo(os.environ.get("GITHUB_REPO", "tripwire/tripwire-demo"))
 LINEAR_TEAM_ID = os.environ.get("LINEAR_TEAM_ID", "TEAM_FAKE")
 
 # Channel IDs. Fakes use C_BUGS / C_GENERAL; real Slack IDs come from env.
