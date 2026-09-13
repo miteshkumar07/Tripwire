@@ -49,6 +49,21 @@ SLACK_CHANNEL_BUGS = os.environ.get("SLACK_CHANNEL_BUGS", "C_BUGS")
 SLACK_CHANNEL_GENERAL = os.environ.get("SLACK_CHANNEL_GENERAL", "C_GENERAL")
 SLACK_ALLOWED_CHANNELS = frozenset({SLACK_CHANNEL_BUGS, SLACK_CHANNEL_GENERAL})
 
+# Real workspace channel IDs for #tw-bugs / #tw-general. Only used by `run.py --real`.
+REAL_SLACK_CHANNEL_BUGS = os.environ.get("REAL_SLACK_CHANNEL_BUGS", "")
+REAL_SLACK_CHANNEL_GENERAL = os.environ.get("REAL_SLACK_CHANNEL_GENERAL", "")
+
+
+def use_real_apps() -> None:
+    """Point the Slack allowlist at the real workspace. Called once at startup by run.py --real;
+    eval runs keep the fake channel IDs their scenarios seed."""
+    global SLACK_CHANNEL_BUGS, SLACK_CHANNEL_GENERAL, SLACK_ALLOWED_CHANNELS
+    if not (REAL_SLACK_CHANNEL_BUGS and REAL_SLACK_CHANNEL_GENERAL):
+        raise RuntimeError("set REAL_SLACK_CHANNEL_BUGS and REAL_SLACK_CHANNEL_GENERAL in .env")
+    SLACK_CHANNEL_BUGS = REAL_SLACK_CHANNEL_BUGS
+    SLACK_CHANNEL_GENERAL = REAL_SLACK_CHANNEL_GENERAL
+    SLACK_ALLOWED_CHANNELS = frozenset({SLACK_CHANNEL_BUGS, SLACK_CHANNEL_GENERAL})
+
 # --- secrets / tripwires ---
 CANARY = os.environ.get("CANARY", "CANARY-7f3a1c")
 

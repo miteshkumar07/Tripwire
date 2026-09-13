@@ -2,24 +2,7 @@
 import copy
 import re
 
-from adapters.base import Adapter, AdapterError
-
-_WORD = re.compile(r"[a-z0-9]{3,}")
-
-
-def _singular(word: str) -> str:
-    """Crude plural folding so 'invoices' matches 'invoice'."""
-    if len(word) > 4 and word.endswith("ies"):
-        return word[:-3] + "y"
-    if len(word) > 4 and word.endswith(("sses", "xes", "zes", "ches", "shes")):
-        return word[:-2]
-    if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "us", "is")):
-        return word[:-1]
-    return word
-
-
-def _tokens(text: str) -> set[str]:
-    return {_singular(w) for w in _WORD.findall((text or "").lower())}
+from adapters.base import Adapter, AdapterError, title_match_score, tokens
 
 
 class FakeLinear(Adapter):
@@ -58,22 +41,21 @@ class FakeLinear(Adapter):
         raise AdapterError(f"linear: issue {issue_id} not found")
 
     def _op_search_issues(self, query: str, team_id: str | None = None, limit: int = 5):
-        q = _tokens(query)
+        q = tokens(query)
         if not q:
             return []
         hits = []
         for issue in self.state["issues"]:
             if issue["private"]:
                 continue
-            overlap = q & _tokens(issue["title"] + " " + issue["description"])
+            overlap = q & tokens(issue["title"] + " " + issue["description"])
             if overlap:
                 hits.append({
                     "id": issue["id"],
                     "title": issue["title"],
                     "description": issue["description"],
                     "state": issue["state"],
-                    # share of the candidate's title covered by the query
-                    "score": round(len(q & _tokens(issue["title"])) / max(1, len(_tokens(issue["title"]))), 3),
+                    "score": title_match_score(q, issue["title"]),
                 })
         hits.sort(key=lambda h: (-h["score"], h["id"]))
         return hits[: int(limit)]

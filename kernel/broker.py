@@ -71,6 +71,17 @@ class ToolBroker:
         adapters = {a.name: a for a in (FakeGitHub(), FakeLinear(), FakeSlack())}
         return cls(adapters, run_id, approval_policy)
 
+    @classmethod
+    def with_real(cls, run_id: str, approval_policy: ApprovalPolicy) -> "ToolBroker":
+        """Live GitHub/Linear/Slack. An explicit approval policy is mandatory; reset() is unavailable."""
+        from adapters.real_github import RealGitHub
+        from adapters.real_linear import RealLinear
+        from adapters.real_slack import RealSlack
+        if approval_policy is None:
+            raise ValueError("real apps require an explicit approval policy")
+        adapters = {a.name: a for a in (RealGitHub(), RealLinear(), RealSlack())}
+        return cls(adapters, run_id, approval_policy)
+
     def reset(self, seed: dict) -> None:
         seed = seed or {}
         for name, adapter in self.adapters.items():

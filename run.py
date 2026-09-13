@@ -1,7 +1,7 @@
 """CLI: run one scenario against fakes, or --real.
 
   python run.py --scenario evals/scenarios/ben_01_checkout_safari.yaml
-  python run.py --real --github-issue 3            (Phase 6)
+  python run.py --real --github-issue 3      live GitHub/Linear/Slack, interactive approval
 """
 import argparse
 import json
@@ -12,6 +12,7 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
+import config
 from agent.executor import DENIAL_KINDS, result_to_dict, run_issue
 from evals.loader import load_scenario
 from kernel.broker import ToolBroker
@@ -37,6 +38,29 @@ def print_trace(result, console: Console) -> None:
         f"slack_messages={len(snap['slack']['messages'])}")
 
 
+def _save(result, run_id: str, console: Console) -> None:
+    RUNS_DIR.mkdir(exist_ok=True)
+    out = RUNS_DIR / f"{run_id}.json"
+    out.write_text(json.dumps(result_to_dict(result), indent=2, default=str))
+    console.print(f"trace written to {out}")
+
+
+def run_real(issue_number: int | None, console: Console) -> int:
+    if not issue_number:
+        console.print("[red]--real requires --github-issue N[/red]")
+        return 2
+    config.use_real_apps()
+    run_id = f"real-gh{issue_number}-{uuid.uuid4().hex[:8]}"
+    broker = ToolBroker.with_real(run_id, approval_policy=Interactive())
+    console.print(f"[bold]LIVE RUN[/bold] github={config.GITHUB_REPO}#{issue_number}  linear team={config.LINEAR_TEAM_ID}  "
+                  f"slack allowlist={sorted(config.SLACK_ALLOWED_CHANNELS)}")
+    console.print("Any ticket or post derived from the issue text will stop and ask for your approval.\n")
+    result = run_issue(broker, issue_number, scenario_id=f"real:github#{issue_number}")
+    print_trace(result, console)
+    _save(result, run_id, console)
+    return 0 if result.completed else 1
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--scenario", help="scenario YAML to run against fake adapters")
@@ -47,8 +71,7 @@ def main(argv=None) -> int:
     console = Console()
 
     if args.real:
-        console.print("[red]Real adapters are built in Phase 6.[/red]")
-        return 2
+        return run_real(args.github_issue, console)
     if not args.scenario:
         p.error("--scenario is required for fake runs")
 
@@ -62,10 +85,7 @@ def main(argv=None) -> int:
 
     result = run_issue(broker, number, scenario_id=scenario["id"])
     print_trace(result, console)
-    RUNS_DIR.mkdir(exist_ok=True)
-    out = RUNS_DIR / f"{run_id}.json"
-    out.write_text(json.dumps(result_to_dict(result), indent=2, default=str))
-    console.print(f"trace written to {out}")
+    _save(result, run_id, console)
     return 0 if result.completed else 1
 
 
