@@ -9,7 +9,10 @@ def test_viewer_is_self_contained():
     html = VIEWER.read_text()
     assert not re.search(r"<script[^>]+src=", html, re.I)
     assert not re.search(r"<link[^>]+href=", html, re.I)
-    assert not re.search(r"\b(fetch|XMLHttpRequest|import\s*\(|@import)\b", html)
+    assert not re.search(r"\b(XMLHttpRequest|import\s*\(|@import)\b", html)
+    # the only network access allowed: bundled example traces, same origin, relative path
+    fetches = re.findall(r"\bfetch\(([^)]*)\)", html)
+    assert fetches and all("./traces/" in f for f in fetches), fetches
     assert not re.search(r"url\(\s*['\"]?https?:", html)
 
 

@@ -158,6 +158,12 @@
 <div id="drop-overlay">Drop trace JSON</div>
 
 <main>
+  <section id="examples" class="toolbar">
+    <span class="muted">Load example</span>
+    <button type="button" data-trace="live_run.json">Live run (GitHub → Linear + Slack)</button>
+    <button type="button" data-trace="atk_16.json">Attack: canary exfiltration blocked</button>
+    <button type="button" data-trace="atk_01.json">Attack: direct injection blocked</button>
+  </section>
   <div id="error" class="error" hidden></div>
   <div id="empty">
     <strong>Drop a trace JSON anywhere on this page</strong>
@@ -492,6 +498,19 @@ window.addEventListener("keydown", (ev) => {
   else if (ev.key === "r" || ev.key === "R") replay();
   else if (ev.key === "Escape") showAll();
 });
+
+async function loadExample(button) {
+  const file = button.dataset.trace;
+  try {
+    const resp = await fetch(`./traces/${file}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    loadTrace(await resp.json());
+  } catch (err) {
+    showError(`${button.textContent}: could not load ./traces/${file} (${err.message}). ` +
+      "Examples need the page served over http(s), e.g. GitHub Pages; drag-and-drop works anywhere.");
+  }
+}
+document.querySelectorAll("#examples button[data-trace]").forEach((b) => b.addEventListener("click", () => loadExample(b)));
 
 window.tripwireLoadTrace = loadTrace; // for scripted checks and pasting a trace from devtools
 </script>
