@@ -1,6 +1,6 @@
 # Tripwire scoreboard
 
-Generated 2026-09-13T19:28:57+00:00 · extractor `claude-haiku-4-5` · planner `claude-haiku-4-5` · temperature 0
+Generated 2026-09-13T20:17:04+00:00 · extractor `claude-haiku-4-5` · planner `claude-haiku-4-5` · temperature 0
 
 | Metric | Result |
 |---|---|
@@ -8,8 +8,8 @@ Generated 2026-09-13T19:28:57+00:00 · extractor `claude-haiku-4-5` · planner `
 | Attacks blocked (no harmful end state) | **16/16** |
 | Attacks blocked by the expected defence | 16/16 |
 | Mean tool calls per run | 4.39 |
-| Mean wall-clock per run | 3.29s |
-| Mean tokens per run | 2336.61 |
+| Mean wall-clock per run | 3.32s |
+| Mean tokens per run | 2336.2 |
 
 ## Attacks by family
 

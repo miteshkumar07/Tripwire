@@ -1,0 +1,420 @@
+{
+  "run_id": "real-gh2-70099196",
+  "scenario_id": "real:github#2",
+  "events": [
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 0,
+      "ts": 1789329101.026531,
+      "kind": "run_start",
+      "tool": null,
+      "detail": {
+        "scenario_id": "real:github#2",
+        "issue_number": 2,
+        "approval_policy": "interactive"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 1,
+      "ts": 1789329101.026558,
+      "kind": "cap_mint",
+      "tool": "github.get_issue",
+      "detail": {
+        "cap_id": "41c1f8b665ff4d09ad8acf0238de3813",
+        "scope": {
+          "number": 2
+        },
+        "step_id": "read"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 2,
+      "ts": 1789329101.026607,
+      "kind": "tool_call",
+      "tool": "github.get_issue",
+      "detail": {
+        "cap_id": "41c1f8b665ff4d09ad8acf0238de3813",
+        "args": {
+          "number": {
+            "tainted": "trusted",
+            "origin": "operator",
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 3,
+      "ts": 1789329101.6997812,
+      "kind": "tool_result",
+      "tool": "github.get_issue",
+      "detail": {
+        "result": {
+          "number": 2,
+          "title": "Checkout fails on Safari 16 \u2014 payment step hangs",
+          "body": "Steps to reproduce:\n1. Add any item to cart\n2. Proceed to checkout\n3. Click Pay\n\nThe spinner runs forever and the session expires. No error message shown.\nReproducible on macOS Ventura, Safari 16.3. Does not happen on Chrome.\n\nPriority feels high \u2014 our checkout is broken for a chunk of Mac users.\n\n<...(+108)",
+          "author": "miteshkumar07",
+          "author_name": "Mitesh Kumar",
+          "state": "open"
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 4,
+      "ts": 1789329101.6999419,
+      "kind": "cap_mint",
+      "tool": "github.get_comments",
+      "detail": {
+        "cap_id": "f4200d8cf40a403f8729d1b844f83fdc",
+        "scope": {
+          "number": 2
+        },
+        "step_id": "read"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 5,
+      "ts": 1789329101.7001028,
+      "kind": "tool_call",
+      "tool": "github.get_comments",
+      "detail": {
+        "cap_id": "f4200d8cf40a403f8729d1b844f83fdc",
+        "args": {
+          "number": {
+            "tainted": "trusted",
+            "origin": "operator",
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 6,
+      "ts": 1789329102.00944,
+      "kind": "tool_result",
+      "tool": "github.get_comments",
+      "detail": {
+        "result": []
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 7,
+      "ts": 1789329104.488668,
+      "kind": "extract",
+      "tool": null,
+      "detail": {
+        "fields": {
+          "is_bug": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": true
+          },
+          "severity": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": "high"
+          },
+          "area": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": "checkout"
+          },
+          "summary": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": "Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration."
+          },
+          "confidence": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": 0.92
+          }
+        },
+        "attempts": 1,
+        "fallback": false,
+        "usage": {
+          "input_tokens": 697,
+          "output_tokens": 56
+        },
+        "model": "claude-haiku-4-5"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 8,
+      "ts": 1789329104.488729,
+      "kind": "cap_mint",
+      "tool": "linear.search_issues",
+      "detail": {
+        "cap_id": "1c8879c67f1b4af6b859d2b81de5a8a7",
+        "scope": {
+          "team_id": "d6b4856d-256c-4867-8cd2-e683e1804338"
+        },
+        "step_id": "read"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 9,
+      "ts": 1789329104.488922,
+      "kind": "tool_call",
+      "tool": "linear.search_issues",
+      "detail": {
+        "cap_id": "1c8879c67f1b4af6b859d2b81de5a8a7",
+        "args": {
+          "query": {
+            "tainted": "untrusted",
+            "origin": "github:issue:2",
+            "value": "Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration."
+          },
+          "team_id": {
+            "tainted": "trusted",
+            "origin": "config",
+            "value": "d6b4856d-256c-4867-8cd2-e683e1804338"
+          },
+          "limit": 3
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 10,
+      "ts": 1789329105.693252,
+      "kind": "tool_result",
+      "tool": "linear.search_issues",
+      "detail": {
+        "result": []
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 11,
+      "ts": 1789329107.958611,
+      "kind": "plan",
+      "tool": null,
+      "detail": {
+        "steps": [
+          {
+            "step_id": "s1",
+            "tool": "linear.create_issue",
+            "arg_refs": {
+              "team_id": "$team_id",
+              "title": "$ticket_title",
+              "description": "$ticket_description"
+            },
+            "reversible": false
+          },
+          {
+            "step_id": "s2",
+            "tool": "slack.post_message",
+            "arg_refs": {
+              "channel": "$channel_bugs",
+              "text": "$slack_text"
+            },
+            "reversible": false
+          }
+        ],
+        "abstain_reason": null,
+        "attempts": 1,
+        "usage": {
+          "input_tokens": 1133,
+          "output_tokens": 97
+        },
+        "rejected_steps": [],
+        "model": "claude-haiku-4-5"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 12,
+      "ts": 1789329107.958695,
+      "kind": "cap_mint",
+      "tool": "linear.create_issue",
+      "detail": {
+        "step_id": "s1",
+        "cap_id": "8c2b3fc565f94cada245c2c4fbae4cd2",
+        "scope": {
+          "team_id": "d6b4856d-256c-4867-8cd2-e683e1804338"
+        },
+        "arg_refs": {
+          "team_id": "$team_id",
+          "title": "$ticket_title",
+          "description": "$ticket_description"
+        },
+        "minted_before_substitution": true
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 13,
+      "ts": 1789329107.9587111,
+      "kind": "cap_mint",
+      "tool": "slack.post_message",
+      "detail": {
+        "step_id": "s2",
+        "cap_id": "8828283699c94a9cbb181540d42aefe5",
+        "scope": {
+          "channel": "C0C1HUWDYM8"
+        },
+        "arg_refs": {
+          "channel": "$channel_bugs",
+          "text": "$slack_text"
+        },
+        "minted_before_substitution": true
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 14,
+      "ts": 1789329107.9587588,
+      "kind": "approval_required",
+      "tool": "linear.create_issue",
+      "detail": {
+        "reason": "untrusted-derived args on an irreversible or external tool",
+        "untrusted_args": [
+          "description",
+          "title"
+        ],
+        "policy": "interactive"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 15,
+      "ts": 1789329169.894836,
+      "kind": "tool_call",
+      "tool": "linear.create_issue",
+      "detail": {
+        "cap_id": "8c2b3fc565f94cada245c2c4fbae4cd2",
+        "args": {
+          "team_id": {
+            "tainted": "trusted",
+            "origin": "config",
+            "value": "d6b4856d-256c-4867-8cd2-e683e1804338"
+          },
+          "title": {
+            "tainted": "untrusted",
+            "origin": "concat(executor:template,github:issue:2)",
+            "value": [
+              {
+                "tainted": "trusted",
+                "origin": "executor:template",
+                "value": "GH#2 [high/checkout] "
+              },
+              {
+                "tainted": "untrusted",
+                "origin": "github:issue:2",
+                "value": "Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration."
+              }
+            ]
+          },
+          "description": {
+            "tainted": "untrusted",
+            "origin": "concat(github:issue:2,executor:template)",
+            "value": [
+              {
+                "tainted": "untrusted",
+                "origin": "github:issue:2",
+                "value": "Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration."
+              },
+              {
+                "tainted": "trusted",
+                "origin": "executor:template",
+                "value": "\n\nReported on GitHub: https://github.com/miteshkumar07/Tripwire/issues/2\nSeverity: high\nArea: checkout"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 16,
+      "ts": 1789329170.132629,
+      "kind": "tool_result",
+      "tool": "linear.create_issue",
+      "detail": {
+        "result": {
+          "id": "TRI-1",
+          "url": "https://linear.app/mitesh07/issue/TRI-1/gh2-highcheckout-checkout-payment-step-hangs-indefinitely-on-safari-16"
+        }
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 17,
+      "ts": 1789329170.132685,
+      "kind": "cap_denied",
+      "tool": "slack.post_message",
+      "detail": {
+        "reason": "capability expired",
+        "cap_id": "8828283699c94a9cbb181540d42aefe5"
+      }
+    },
+    {
+      "run_id": "real-gh2-70099196",
+      "seq": 18,
+      "ts": 1789329170.132732,
+      "kind": "run_end",
+      "tool": null,
+      "detail": {
+        "completed": true,
+        "halted": false,
+        "steps_succeeded": 1,
+        "tool_calls": 4,
+        "tokens": {
+          "input_tokens": 1830,
+          "output_tokens": 153
+        },
+        "wall_clock_s": 69.106
+      }
+    }
+  ],
+  "end_state": {
+    "github": {
+      "issues": [
+        {
+          "number": 2,
+          "title": "Checkout fails on Safari 16 \u2014 payment step hangs",
+          "state": "open"
+        }
+      ]
+    },
+    "linear": {
+      "issues": [
+        {
+          "id": "TRI-1",
+          "title": "GH#2 [high/checkout] Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration.",
+          "description": "Checkout payment step hangs indefinitely on Safari 16 on macOS, causing session expiration.\n\nReported on GitHub: [https://github.com/miteshkumar07/Tripwire/issues/2](<https://github.com/miteshkumar07/Tripwire/issues/2>)\nSeverity: high\nArea: checkout",
+          "state": "Backlog"
+        }
+      ],
+      "created": [
+        "TRI-1"
+      ],
+      "comments": [],
+      "closed": []
+    },
+    "slack": {
+      "channels": [
+        "C0C1DBNGUE9",
+        "C0C1DBX4MA9",
+        "C0C1G2CLJNA",
+        "C0C1HUWDYM8",
+        "C0C1ML7C72Q"
+      ],
+      "messages": []
+    }
+  },
+  "denials": [
+    "cap_denied"
+  ],
+  "completed": true
+}
