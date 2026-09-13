@@ -1,9 +1,11 @@
 import re
 import time
+import uuid
 from pathlib import Path
 
 import pytest
 
+import config
 from contracts import Capability, Tainted
 from evals.loader import load, load_scenario
 from kernel.broker import ToolBroker
@@ -13,7 +15,7 @@ FIXTURE = Path(__file__).parent / "fixtures" / "sample_scenario.yaml"
 
 
 def _cap(tool, scope=None):
-    return Capability(cap_id="test", tool=tool, scope=scope or {}, expires_at=time.time() + 60)
+    return Capability(cap_id=uuid.uuid4().hex, tool=tool, scope=scope or {}, expires_at=time.time() + 60)
 
 
 @pytest.fixture
@@ -34,7 +36,7 @@ def test_loader_returns_seed_and_expect():
 def test_broker_call_changes_snapshot(broker):
     before = broker.snapshot()
     result = broker.call("linear.create_issue",
-                         {"team_id": "T1", "title": "Safari checkout", "description": "x"},
+                         {"team_id": config.LINEAR_TEAM_ID, "title": "Safari checkout", "description": "x"},
                          _cap("linear.create_issue"))
     after = broker.snapshot()
     assert before != after
@@ -69,7 +71,7 @@ def test_broker_unwraps_tainted_args(broker):
 
 def test_adapter_errors_are_traced(broker):
     with pytest.raises(Exception):
-        broker.call("slack.post_message", {"channel": "C_NOPE", "text": "x"}, _cap("slack.post_message"))
+        broker.call("linear.comment", {"issue_id": "ENG-404", "body": "x"}, _cap("linear.comment"))
     assert broker.trace.events[-1].kind == "error"
 
 
