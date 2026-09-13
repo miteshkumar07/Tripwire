@@ -1,7 +1,7 @@
 """Mints capabilities from the plan, substitutes args, drives the broker.
 
-Order per run: read issue -> extract (quarantined) -> dedupe -> plan -> mint every
-capability from the plan -> substitute $symbols -> broker.call each step.
+Order per run: read issue -> extract (quarantined) -> dedupe -> plan -> then for each step:
+mint its capability from the plan -> substitute $symbols -> broker.call.
 """
 import dataclasses
 import re
@@ -167,8 +167,10 @@ def run_issue(broker: ToolBroker, issue_number: int, scenario_id: str = "adhoc",
             abstained = True
             trace.emit("abstain", None, {"reason": plan.abstain_reason})
         else:
-            minted = [(step, mint_for_step(step, symbols, broker)) for step in plan.steps]
-            for step, cap in minted:
+            for step in plan.steps:
+                # Minted from the plan, immediately before this step and before substitution.
+                # Minting all steps up front let a slow human approval expire later capabilities.
+                cap = mint_for_step(step, symbols, broker)
                 if cap is None:
                     continue
                 args = {arg: symbols.resolve(ref) for arg, ref in step.arg_refs.items()}

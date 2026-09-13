@@ -1,5 +1,6 @@
 """Agent tests against fakes with a stub LLM client (offline, deterministic)."""
 import json
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -96,14 +97,33 @@ def test_capabilities_minted_before_substitution_and_never_from_extractor():
     llm = StubLLM([GOOD_EXTRACT], [CREATE, SLACK_BUGS])
     result = run(llm, seed(), AutoApprove())
     plan_mints = [e for e in result.events if e.kind == "cap_mint" and e.detail.get("step_id") != "read"]
-    plan_idx = kinds(result).index("plan")
-    first_write = next(e.seq for e in result.events
-                       if e.kind == "tool_call" and e.seq > plan_idx)
     assert len(plan_mints) == 2
-    assert all(m.seq < first_write for m in plan_mints)
+    for mint in plan_mints:
+        call = next(e for e in result.events
+                    if e.kind == "tool_call" and e.detail.get("cap_id") == mint.detail["cap_id"])
+        assert mint.seq < call.seq
+    # minted one step at a time: step 2's capability does not exist until step 1 has finished
+    first_result = next(e.seq for e in result.events if e.kind == "tool_result" and e.tool == "linear.create_issue")
+    assert plan_mints[1].seq > first_result
     scope_values = json.dumps([m.detail["scope"] for m in plan_mints])
     assert GOOD_EXTRACT["summary"] not in scope_values
     assert "high" not in scope_values and "checkout" not in scope_values
+
+
+def test_slow_approval_does_not_expire_later_steps(monkeypatch):
+    clock = {"now": 1_000_000.0}
+    monkeypatch.setattr(time, "time", lambda: clock["now"])
+
+    class SlowHuman(AutoApprove):
+        def approve(self, tool, args, reason):
+            clock["now"] += 10 * config.CAP_TTL_SECONDS  # reading the prompt takes 10 minutes
+            return True
+
+    llm = StubLLM([GOOD_EXTRACT], [CREATE, SLACK_BUGS])
+    result = run(llm, seed(), SlowHuman())
+    assert result.denials == []
+    assert len(result.end_state["linear"]["created"]) == 1
+    assert len(result.end_state["slack"]["messages"]) == 1
 
 
 def test_injected_issue_under_autodeny_partial_completion():
