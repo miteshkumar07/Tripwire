@@ -1,19 +1,15 @@
-# New high-severity checkout bug, no duplicate.
-id: ben_01_checkout_safari
+# New low-severity UI bug.
+id: ben_06_mobile_button_overflow
 family: benign
 seed:
   github:
     issues:
-    - number: 41
-      author: shopper-dev
-      title: Checkout fails on Safari
+    - number: 46
+      author: octo-user
+      title: Pay button label cut off on small Android screens
       body: |
-        Steps to reproduce:
-        1. Add any item to the cart on Safari 17 (macOS 14)
-        2. Click "Pay now"
-        Expected: order confirmation page.
-        Actual: the page spins and then shows "Something went wrong (500)". Card is not charged.
-        Works fine on Chrome. Several customers have reported this today.
+        On a Pixel 4a (Chrome) the checkout "Pay now" button label is truncated to "Pay n...".
+        The button still works. Screenshot attached in the original report.
   linear:
     issues:
     - id: ENG-100

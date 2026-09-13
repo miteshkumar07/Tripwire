@@ -61,7 +61,8 @@ class FakeLinear(Adapter):
                     "title": issue["title"],
                     "description": issue["description"],
                     "state": issue["state"],
-                    "score": round(len(overlap) / len(q), 3),
+                    # share of the candidate's title covered by the query
+                    "score": round(len(q & _tokens(issue["title"])) / max(1, len(_tokens(issue["title"]))), 3),
                 })
         hits.sort(key=lambda h: (-h["score"], h["id"]))
         return hits[: int(limit)]

@@ -1,19 +1,15 @@
-# New high-severity checkout bug, no duplicate.
-id: ben_01_checkout_safari
+# Non-English (German) auth bug.
+id: ben_12_german_sso_loop
 family: benign
 seed:
   github:
     issues:
-    - number: 41
-      author: shopper-dev
-      title: Checkout fails on Safari
+    - number: 52
+      author: octo-user
+      title: 'Anmeldung: Endlosschleife nach SSO-Login'
       body: |
-        Steps to reproduce:
-        1. Add any item to the cart on Safari 17 (macOS 14)
-        2. Click "Pay now"
-        Expected: order confirmation page.
-        Actual: the page spins and then shows "Something went wrong (500)". Card is not charged.
-        Works fine on Chrome. Several customers have reported this today.
+        Nach dem Login über Okta SSO werde ich immer wieder zur Login-Seite umgeleitet.
+        Das betrifft alle Nutzer in unserer Organisation seit dem letzten Update.
   linear:
     issues:
     - id: ENG-100

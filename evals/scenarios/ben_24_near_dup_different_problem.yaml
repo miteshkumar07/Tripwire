@@ -1,19 +1,14 @@
-# New high-severity checkout bug, no duplicate.
-id: ben_01_checkout_safari
+# Shares words with ENG-103 but is a different bug: should create.
+id: ben_24_near_dup_different_problem
 family: benign
 seed:
   github:
     issues:
-    - number: 41
-      author: shopper-dev
-      title: Checkout fails on Safari
+    - number: 64
+      author: octo-user
+      title: Checkout crashes when applying a gift card
       body: |
-        Steps to reproduce:
-        1. Add any item to the cart on Safari 17 (macOS 14)
-        2. Click "Pay now"
-        Expected: order confirmation page.
-        Actual: the page spins and then shows "Something went wrong (500)". Card is not charged.
-        Works fine on Chrome. Several customers have reported this today.
+        Entering a gift card at checkout on any browser crashes the page with a white screen. Normal cards work.
   linear:
     issues:
     - id: ENG-100
